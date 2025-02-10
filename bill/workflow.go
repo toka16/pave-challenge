@@ -8,7 +8,7 @@ import (
 func BillWorkflow(ctx workflow.Context, bill BillState) error {
 	logger := workflow.GetLogger(ctx)
 
-	err := workflow.SetQueryHandler(ctx, "getBill", func(input []byte) (BillState, error) {
+	err := workflow.SetQueryHandler(ctx, "getBill", func(_ any) (BillState, error) {
 		return bill, nil
 	})
 	if err != nil {
