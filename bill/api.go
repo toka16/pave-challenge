@@ -2,6 +2,7 @@ package bill
 
 import (
 	"context"
+	"encore.dev/beta/errs"
 	"encore.dev/rlog"
 	"fmt"
 	"go.temporal.io/sdk/client"
@@ -51,7 +52,7 @@ func (s *Service) CreateBill(ctx context.Context) (*BillResponse, error) {
 	_, err := s.client.ExecuteWorkflow(context.Background(), options, BillWorkflow, bill)
 	if err != nil {
 		rlog.Error("Error executing workflow", err)
-		return nil, err
+		return nil, &errs.Error{Code: errs.Internal, Message: err.Error()}
 	}
 	rlog.Debug("Bill created", rlog.With("bill", bill))
 
@@ -63,12 +64,12 @@ func (s *Service) QueryBill(ctx context.Context, billID string) (*BillResponse, 
 	response, err := s.client.QueryWorkflow(context.Background(), billID, "", "getBill")
 	if err != nil {
 		rlog.Error("Error querying workflow", err)
-		return nil, err
+		return nil, &errs.Error{Code: errs.Internal, Message: err.Error()}
 	}
 	var res BillState
 	if err = response.Get(&res); err != nil {
 		rlog.Error("Error getting workflow state", err)
-		return nil, err
+		return nil, &errs.Error{Code: errs.Internal, Message: err.Error()}
 	}
 	rlog.Debug("Bill queried", rlog.With("bill", res))
 	return BillResponseFromState(res), nil
@@ -79,7 +80,7 @@ func (s *Service) CloseBill(ctx context.Context, billID string) error {
 	err := s.client.SignalWorkflow(context.Background(), billID, "", CHANNEL_CLOSE, nil)
 	if err != nil {
 		rlog.Error("Error signaling workflow", err)
-		return err
+		return &errs.Error{Code: errs.Internal, Message: err.Error()}
 	}
 	return nil
 }
@@ -100,13 +101,13 @@ func (s *Service) AddItem(ctx context.Context, billID string, item BillItemDTO) 
 	handle, err := s.client.UpdateWorkflow(ctx, updateOptions)
 	if err != nil {
 		rlog.Error("Error updating workflow", err)
-		return err
+		return &errs.Error{Code: errs.Internal, Message: err.Error()}
 	}
 	billState := BillState{Items: make([]BillItem, 0)}
 	err = handle.Get(ctx, &billState)
 	if err != nil {
 		rlog.Error("Error getting workflow state", err)
-		return err
+		return &errs.Error{Code: errs.InvalidArgument, Message: err.Error()}
 	}
 	rlog.Debug("Item added", rlog.With("bill", billState))
 
@@ -127,13 +128,13 @@ func (s *Service) RemoveItem(ctx context.Context, billID string, itemID string) 
 	handle, err := s.client.UpdateWorkflow(ctx, updateOptions)
 	if err != nil {
 		rlog.Error("Error updating workflow", err)
-		return err
+		return &errs.Error{Code: errs.Internal, Message: err.Error()}
 	}
 	billState := BillState{Items: make([]BillItem, 0)}
 	err = handle.Get(ctx, &billState)
 	if err != nil {
 		rlog.Error("Error getting workflow state", err)
-		return err
+		return &errs.Error{Code: errs.InvalidArgument, Message: err.Error()}
 	}
 	rlog.Debug("Item removed", rlog.With("bill", billState))
 
