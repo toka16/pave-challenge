@@ -2,6 +2,7 @@ package bill
 
 import (
 	"context"
+	"encore.dev/rlog"
 	"fmt"
 	"go.temporal.io/sdk/client"
 	"time"
@@ -39,7 +40,6 @@ func BillResponseFromState(state BillState) *BillResponse {
 
 //encore:api public method=POST path=/bill
 func (s *Service) CreateBill(ctx context.Context) (*BillResponse, error) {
-	fmt.Println("CreateBill")
 	billID := "BILL-" + fmt.Sprintf("%d", time.Now().Unix())
 
 	options := client.StartWorkflowOptions{
@@ -50,31 +50,35 @@ func (s *Service) CreateBill(ctx context.Context) (*BillResponse, error) {
 	bill := BillState{ID: billID, Items: make([]BillItem, 0), Status: BillStatusOpen}
 	_, err := s.client.ExecuteWorkflow(context.Background(), options, BillWorkflow, bill)
 	if err != nil {
+		rlog.Error("Error executing workflow", err)
 		return nil, err
 	}
+	rlog.Debug("Bill created", rlog.With("bill", bill))
 
 	return BillResponseFromState(bill), nil
 }
 
 //encore:api public method=GET path=/bill/:billID
 func (s *Service) QueryBill(ctx context.Context, billID string) (*BillResponse, error) {
-	fmt.Println("QueryBill: " + billID)
 	response, err := s.client.QueryWorkflow(context.Background(), billID, "", "getBill")
 	if err != nil {
+		rlog.Error("Error querying workflow", err)
 		return nil, err
 	}
 	var res BillState
-	if err := response.Get(&res); err != nil {
+	if err = response.Get(&res); err != nil {
+		rlog.Error("Error getting workflow state", err)
 		return nil, err
 	}
+	rlog.Debug("Bill queried", rlog.With("bill", res))
 	return BillResponseFromState(res), nil
 }
 
 //encore:api public method=POST path=/bill/:billID/close
 func (s *Service) CloseBill(ctx context.Context, billID string) error {
-	fmt.Println("CloseBill: " + billID)
-	err := s.client.SignalWorkflow(context.Background(), billID, "", ActionChannels.CLOSE_CHANNEL, nil)
+	err := s.client.SignalWorkflow(context.Background(), billID, "", CHANNEL_CLOSE, nil)
 	if err != nil {
+		rlog.Error("Error signaling workflow", err)
 		return err
 	}
 	return nil
@@ -82,29 +86,56 @@ func (s *Service) CloseBill(ctx context.Context, billID string) error {
 
 //encore:api public method=POST path=/bill/:billID/items
 func (s *Service) AddItem(ctx context.Context, billID string, item BillItemDTO) error {
-	fmt.Println("AddItem: "+billID, " item: ", item)
-
-	payload := AddItemSignal{Item: BillItem{
+	payload := ModifyItemData{Item: BillItem{
 		ItemID: item.ItemID,
 		Name:   item.Name,
 		Price:  item.Price,
 	}}
-	err := s.client.SignalWorkflow(context.Background(), billID, "", ActionChannels.ADD_ITEM_CHANNEL, payload)
+	updateOptions := client.UpdateWorkflowOptions{
+		WorkflowID:   billID,
+		UpdateName:   UPDATE_NAME_MODIFY_ITEMS,
+		WaitForStage: client.WorkflowUpdateStageCompleted,
+		Args:         []interface{}{ACTION_ADD_ITEM, payload},
+	}
+	handle, err := s.client.UpdateWorkflow(ctx, updateOptions)
 	if err != nil {
+		rlog.Error("Error updating workflow", err)
 		return err
 	}
+	billState := BillState{Items: make([]BillItem, 0)}
+	err = handle.Get(ctx, &billState)
+	if err != nil {
+		rlog.Error("Error getting workflow state", err)
+		return err
+	}
+	rlog.Debug("Item added", rlog.With("bill", billState))
+
 	return nil
 }
 
 //encore:api public method=DELETE path=/bill/:billID/items/:itemID
 func (s *Service) RemoveItem(ctx context.Context, billID string, itemID string) error {
-	fmt.Println("RemoveItem: "+billID, " item: ", itemID)
-
-	payload := RemoveItemSignal{ItemID: itemID}
-	err := s.client.SignalWorkflow(context.Background(), billID, "", ActionChannels.REMOVE_ITEM_CHANNEL, payload)
+	payload := ModifyItemData{Item: BillItem{
+		ItemID: itemID,
+	}}
+	updateOptions := client.UpdateWorkflowOptions{
+		WorkflowID:   billID,
+		UpdateName:   UPDATE_NAME_MODIFY_ITEMS,
+		WaitForStage: client.WorkflowUpdateStageCompleted,
+		Args:         []interface{}{ACTION_REMOVE_ITEM, payload},
+	}
+	handle, err := s.client.UpdateWorkflow(ctx, updateOptions)
 	if err != nil {
+		rlog.Error("Error updating workflow", err)
 		return err
 	}
+	billState := BillState{Items: make([]BillItem, 0)}
+	err = handle.Get(ctx, &billState)
+	if err != nil {
+		rlog.Error("Error getting workflow state", err)
+		return err
+	}
+	rlog.Debug("Item removed", rlog.With("bill", billState))
 
 	return nil
 }

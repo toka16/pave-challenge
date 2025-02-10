@@ -1,19 +1,14 @@
 package bill
 
-var ActionChannels = struct {
-	ADD_ITEM_CHANNEL    string
-	REMOVE_ITEM_CHANNEL string
-	CLOSE_CHANNEL       string
-}{
-	ADD_ITEM_CHANNEL:    "ADD_ITEM_CHANNEL",
-	REMOVE_ITEM_CHANNEL: "REMOVE_ITEM_CHANNEL",
-	CLOSE_CHANNEL:       "CLOSE_CHANNEL",
-}
+const (
+	CHANNEL_CLOSE = "CHANNEL_CLOSE"
 
-type AddItemSignal struct {
+	UPDATE_NAME_MODIFY_ITEMS = "MODIFY_ITEMS"
+
+	ACTION_ADD_ITEM    = "ADD_ITEM"
+	ACTION_REMOVE_ITEM = "REMOVE_ITEM"
+)
+
+type ModifyItemData struct {
 	Item BillItem
-}
-
-type RemoveItemSignal struct {
-	ItemID string
 }
