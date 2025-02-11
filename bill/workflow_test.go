@@ -11,7 +11,7 @@ func Test_Workflow(t *testing.T) {
 	env := testSuite.NewTestWorkflowEnvironment()
 	onAccept := func() {}
 	shouldNotAccept := func() { require.Fail(t, "Should not accept") }
-	shouldNotReject := func(err error) { require.Fail(t, "Should not reject") }
+	shouldNotReject := func(err error) { require.Fail(t, "Should not reject, err: "+err.Error()) }
 	shouldNotComplete := func(i interface{}, err error) { require.Fail(t, "Should not complete") }
 
 	// add first item
@@ -157,6 +157,7 @@ func Test_Workflow(t *testing.T) {
 		env.SignalWorkflow(CHANNEL_CLOSE, nil)
 	}, 0)
 
+	// add item after bill is closed
 	env.RegisterDelayedCallback(func() {
 		env.UpdateWorkflow(UPDATE_NAME_MODIFY_ITEMS, "", &testsuite.TestUpdateCallback{
 			OnAccept:   shouldNotAccept,
@@ -165,6 +166,7 @@ func Test_Workflow(t *testing.T) {
 		}, ACTION_REMOVE_ITEM, ModifyItemData{Item: BillItem{ItemID: "it2"}})
 	}, 10)
 
+	// remove item after bill is closed
 	env.RegisterDelayedCallback(func() {
 		env.UpdateWorkflow(UPDATE_NAME_MODIFY_ITEMS, "", &testsuite.TestUpdateCallback{
 			OnAccept:   shouldNotAccept,
@@ -177,5 +179,6 @@ func Test_Workflow(t *testing.T) {
 
 	require.True(t, env.IsWorkflowCompleted())
 	require.NoError(t, env.GetWorkflowError())
+	env.AssertExpectations(t)
 
 }
