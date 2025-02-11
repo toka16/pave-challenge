@@ -9,36 +9,6 @@ import (
 	"time"
 )
 
-type BillResponse struct {
-	ID     string        `json:"id"`
-	Sum    float64       `json:"sum"`
-	Items  []BillItemDTO `json:"items"`
-	Status string        `json:"status"`
-}
-type BillItemDTO struct {
-	ItemID string  `json:"item_id"`
-	Name   string  `json:"name"`
-	Price  float64 `json:"price"`
-}
-
-func BillResponseFromState(state BillState) *BillResponse {
-	res := &BillResponse{
-		ID:     state.ID,
-		Sum:    0,
-		Items:  make([]BillItemDTO, 0, len(state.Items)),
-		Status: string(state.Status),
-	}
-	for _, item := range state.Items {
-		res.Items = append(res.Items, BillItemDTO{
-			ItemID: item.ItemID,
-			Name:   item.Name,
-			Price:  item.Price,
-		})
-		res.Sum += item.Price
-	}
-	return res
-}
-
 //encore:api public method=POST path=/bill
 func (s *Service) CreateBill(ctx context.Context) (*BillResponse, error) {
 	billID := "BILL-" + fmt.Sprintf("%d", time.Now().Unix())
@@ -49,7 +19,7 @@ func (s *Service) CreateBill(ctx context.Context) (*BillResponse, error) {
 	}
 
 	bill := BillState{ID: billID, Items: make([]BillItem, 0), Status: BillStatusOpen}
-	_, err := s.client.ExecuteWorkflow(context.Background(), options, BillWorkflow, bill)
+	_, err := s.client.ExecuteWorkflow(context.Background(), options, Workflow, bill)
 	if err != nil {
 		rlog.Error("Error executing workflow", err)
 		return nil, &errs.Error{Code: errs.Internal, Message: err.Error()}

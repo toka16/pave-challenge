@@ -22,7 +22,7 @@ func initService() (*Service, error) {
 	}
 
 	w := worker.New(c, TaskQueueName, worker.Options{})
-	w.RegisterWorkflow(BillWorkflow)
+	w.RegisterWorkflow(Workflow)
 
 	err = w.Start()
 	if err != nil {

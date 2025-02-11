@@ -5,7 +5,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func BillWorkflow(ctx workflow.Context, bill BillState) error {
+func Workflow(ctx workflow.Context, bill BillState) error {
 	logger := workflow.GetLogger(ctx)
 
 	err := workflow.SetQueryHandler(ctx, "getBill", func(_ any) (BillState, error) {

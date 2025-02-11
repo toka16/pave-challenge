@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_BillWorkflow(t *testing.T) {
+func Test_Workflow(t *testing.T) {
 	testSuite := &testsuite.WorkflowTestSuite{}
 	env := testSuite.NewTestWorkflowEnvironment()
 	onAccept := func() {}
@@ -173,7 +173,7 @@ func Test_BillWorkflow(t *testing.T) {
 		}, ACTION_ADD_ITEM, ModifyItemData{Item: BillItem{ItemID: "it3"}})
 	}, 10)
 
-	env.ExecuteWorkflow(BillWorkflow, BillState{})
+	env.ExecuteWorkflow(Workflow, BillState{})
 
 	require.True(t, env.IsWorkflowCompleted())
 	require.NoError(t, env.GetWorkflowError())
