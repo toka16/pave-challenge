@@ -8,9 +8,10 @@ const (
 )
 
 type BillState struct {
-	ID     string
-	Items  []BillItem
-	Status BillStatus
+	ID       string
+	Currency string
+	Items    []BillItem
+	Status   BillStatus
 }
 
 type BillItem struct {

@@ -6,11 +6,17 @@ import (
 	"encore.dev/rlog"
 	"fmt"
 	"go.temporal.io/sdk/client"
+	"slices"
 	"time"
 )
 
+var allowedCurrencies = []string{"GEL", "USD"}
+
 //encore:api public method=POST path=/bill
-func (s *Service) CreateBill(ctx context.Context) (*BillResponse, error) {
+func (s *Service) CreateBill(ctx context.Context, req CreateBillRequest) (*BillResponse, error) {
+	if !slices.Contains(allowedCurrencies, req.Currency) {
+		return nil, &errs.Error{Code: errs.InvalidArgument, Message: fmt.Sprintf("Invalid currency. Available currencies are: %v", allowedCurrencies)}
+	}
 	billID := "BILL-" + fmt.Sprintf("%d", time.Now().Unix())
 
 	options := client.StartWorkflowOptions{
@@ -18,7 +24,7 @@ func (s *Service) CreateBill(ctx context.Context) (*BillResponse, error) {
 		TaskQueue: TaskQueueName,
 	}
 
-	bill := BillState{ID: billID, Items: make([]BillItem, 0), Status: BillStatusOpen}
+	bill := BillState{ID: billID, Currency: req.Currency, Items: make([]BillItem, 0), Status: BillStatusOpen}
 	_, err := s.client.ExecuteWorkflow(context.Background(), options, Workflow, bill)
 	if err != nil {
 		rlog.Error("Error executing workflow", err)

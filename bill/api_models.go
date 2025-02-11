@@ -1,10 +1,14 @@
 package bill
 
+type CreateBillRequest struct {
+	Currency string `json:"currency"`
+}
 type BillResponse struct {
-	ID     string        `json:"id"`
-	Sum    float64       `json:"sum"`
-	Items  []BillItemDTO `json:"items"`
-	Status string        `json:"status"`
+	ID       string        `json:"id"`
+	Currency string        `json:"currency"`
+	Sum      float64       `json:"sum"`
+	Items    []BillItemDTO `json:"items"`
+	Status   string        `json:"status"`
 }
 type BillItemDTO struct {
 	ItemID string  `json:"item_id"`
@@ -14,10 +18,11 @@ type BillItemDTO struct {
 
 func BillResponseFromState(state BillState) *BillResponse {
 	res := &BillResponse{
-		ID:     state.ID,
-		Sum:    0,
-		Items:  make([]BillItemDTO, 0, len(state.Items)),
-		Status: string(state.Status),
+		ID:       state.ID,
+		Currency: state.Currency,
+		Sum:      0,
+		Items:    make([]BillItemDTO, 0, len(state.Items)),
+		Status:   string(state.Status),
 	}
 	for _, item := range state.Items {
 		res.Items = append(res.Items, BillItemDTO{
