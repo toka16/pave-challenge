@@ -20,9 +20,10 @@ type BillItem struct {
 }
 
 func (b *BillState) AddItem(item BillItem) {
-	for _, v := range b.Items {
+	for i, v := range b.Items {
 		if v.ItemID == item.ItemID {
-			return // don't add the same item twice
+			b.Items[i] = item // override the existing item
+			return
 		}
 	}
 	b.Items = append(b.Items, item)
