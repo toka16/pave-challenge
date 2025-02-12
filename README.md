@@ -13,6 +13,13 @@ This is an assignment for the Pave band interview process. The task is to build 
 **Running the Application**
 
 To run the application locally, use the following command:
+
+First run the temporal locally:
+```bash
+temporal server start-dev
+```
+
+Then run the app:
 ```bash
 encore run
 ```
