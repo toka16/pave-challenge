@@ -17,6 +17,13 @@ To run the application locally, use the following command:
 encore run
 ```
 
+**Testing the Application**
+
+To test the application, use the following command:
+```bash
+encore test ./...
+```
+
 
 # Bill Service API
 
