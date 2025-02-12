@@ -36,14 +36,6 @@ func Workflow(ctx workflow.Context, bill BillState) error {
 			if item.Item.ItemID == "" {
 				return errors.New("item id cannot be empty")
 			}
-			if action == ACTION_ADD_ITEM {
-				if item.Item.Name == "" {
-					return errors.New("name cannot be empty")
-				}
-				if item.Item.Price <= 0 {
-					return errors.New("price must be greater than 0")
-				}
-			}
 			return nil
 		},
 	})

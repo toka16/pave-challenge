@@ -60,42 +60,6 @@ func Test_Workflow(t *testing.T) {
 		}, ACTION_ADD_ITEM, ModifyItemData{Item: BillItem{ItemID: "", Name: "apple", Price: 1.0}})
 	}, 0)
 
-	// add item with empty name
-	env.RegisterDelayedCallback(func() {
-		env.UpdateWorkflow(UPDATE_NAME_MODIFY_ITEMS, "", &testsuite.TestUpdateCallback{
-			OnAccept: shouldNotAccept,
-			OnReject: func(err error) {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), "name cannot be empty")
-			},
-			OnComplete: shouldNotComplete,
-		}, ACTION_ADD_ITEM, ModifyItemData{Item: BillItem{ItemID: "it2", Name: "", Price: 1.0}})
-	}, 0)
-
-	// add item with price 0
-	env.RegisterDelayedCallback(func() {
-		env.UpdateWorkflow(UPDATE_NAME_MODIFY_ITEMS, "", &testsuite.TestUpdateCallback{
-			OnAccept: shouldNotAccept,
-			OnReject: func(err error) {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), "price must be greater than 0")
-			},
-			OnComplete: shouldNotComplete,
-		}, ACTION_ADD_ITEM, ModifyItemData{Item: BillItem{ItemID: "it2", Name: "apple", Price: 0.0}})
-	}, 0)
-
-	// add item with negative price
-	env.RegisterDelayedCallback(func() {
-		env.UpdateWorkflow(UPDATE_NAME_MODIFY_ITEMS, "", &testsuite.TestUpdateCallback{
-			OnAccept: shouldNotAccept,
-			OnReject: func(err error) {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), "price must be greater than 0")
-			},
-			OnComplete: shouldNotComplete,
-		}, ACTION_ADD_ITEM, ModifyItemData{Item: BillItem{ItemID: "it2", Name: "apple", Price: -5}})
-	}, 0)
-
 	// add second item
 	env.RegisterDelayedCallback(func() {
 		env.UpdateWorkflow(UPDATE_NAME_MODIFY_ITEMS, "", &testsuite.TestUpdateCallback{

@@ -1,8 +1,26 @@
 package bill
 
+import (
+	"fmt"
+	"slices"
+)
+
+var allowedCurrencies = []string{"GEL", "USD"}
+
 type CreateBillRequest struct {
 	Currency string `json:"currency"`
 }
+
+func (r CreateBillRequest) Validate() error {
+	if r.Currency == "" {
+		return fmt.Errorf("currency is required")
+	}
+	if !slices.Contains(allowedCurrencies, r.Currency) {
+		return fmt.Errorf("Invalid currency. Available currencies are: %v", allowedCurrencies)
+	}
+	return nil
+}
+
 type BillResponse struct {
 	ID       string        `json:"id"`
 	Currency string        `json:"currency"`
@@ -14,6 +32,19 @@ type BillItemDTO struct {
 	ItemID string  `json:"item_id"`
 	Name   string  `json:"name"`
 	Price  float64 `json:"price"`
+}
+
+func (b BillItemDTO) Validate() error {
+	if b.ItemID == "" {
+		return fmt.Errorf("item_id is required")
+	}
+	if b.Name == "" {
+		return fmt.Errorf("name is required")
+	}
+	if b.Price <= 0 {
+		return fmt.Errorf("price must be greater than 0")
+	}
+	return nil
 }
 
 func BillResponseFromState(state BillState) *BillResponse {

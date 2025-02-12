@@ -6,17 +6,11 @@ import (
 	"encore.dev/rlog"
 	"fmt"
 	"go.temporal.io/sdk/client"
-	"slices"
 	"time"
 )
 
-var allowedCurrencies = []string{"GEL", "USD"}
-
 //encore:api public method=POST path=/bill
 func (s *Service) CreateBill(ctx context.Context, req CreateBillRequest) (*BillResponse, error) {
-	if !slices.Contains(allowedCurrencies, req.Currency) {
-		return nil, &errs.Error{Code: errs.InvalidArgument, Message: fmt.Sprintf("Invalid currency. Available currencies are: %v", allowedCurrencies)}
-	}
 	billID := "BILL-" + fmt.Sprintf("%d", time.Now().Unix())
 
 	options := client.StartWorkflowOptions{
@@ -25,7 +19,7 @@ func (s *Service) CreateBill(ctx context.Context, req CreateBillRequest) (*BillR
 	}
 
 	bill := BillState{ID: billID, Currency: req.Currency, Items: make([]BillItem, 0), Status: BillStatusOpen}
-	_, err := s.client.ExecuteWorkflow(context.Background(), options, Workflow, bill)
+	_, err := s.client.ExecuteWorkflow(ctx, options, Workflow, bill)
 	if err != nil {
 		rlog.Error("Error executing workflow", err)
 		return nil, &errs.Error{Code: errs.Internal, Message: err.Error()}
@@ -37,7 +31,7 @@ func (s *Service) CreateBill(ctx context.Context, req CreateBillRequest) (*BillR
 
 //encore:api public method=GET path=/bill/:billID
 func (s *Service) QueryBill(ctx context.Context, billID string) (*BillResponse, error) {
-	response, err := s.client.QueryWorkflow(context.Background(), billID, "", "getBill")
+	response, err := s.client.QueryWorkflow(ctx, billID, "", "getBill")
 	if err != nil {
 		rlog.Error("Error querying workflow", err)
 		return nil, &errs.Error{Code: errs.Internal, Message: err.Error()}
@@ -53,7 +47,7 @@ func (s *Service) QueryBill(ctx context.Context, billID string) (*BillResponse, 
 
 //encore:api public method=POST path=/bill/:billID/close
 func (s *Service) CloseBill(ctx context.Context, billID string) error {
-	err := s.client.SignalWorkflow(context.Background(), billID, "", CHANNEL_CLOSE, nil)
+	err := s.client.SignalWorkflow(ctx, billID, "", CHANNEL_CLOSE, nil)
 	if err != nil {
 		rlog.Error("Error signaling workflow", err)
 		return &errs.Error{Code: errs.Internal, Message: err.Error()}
