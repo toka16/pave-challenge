@@ -2,6 +2,7 @@ package bill
 
 import (
 	"context"
+	"encore.app/bill/workflow"
 	"fmt"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -22,7 +23,7 @@ func initService() (*Service, error) {
 	}
 
 	w := worker.New(c, TaskQueueName, worker.Options{})
-	w.RegisterWorkflow(Workflow)
+	w.RegisterWorkflow(workflow.Workflow)
 
 	err = w.Start()
 	if err != nil {

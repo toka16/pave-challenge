@@ -1,4 +1,4 @@
-package bill
+package workflow
 
 import (
 	"github.com/stretchr/testify/require"

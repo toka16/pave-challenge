@@ -1,4 +1,4 @@
-package bill
+package workflow
 
 const (
 	CHANNEL_CLOSE = "CHANNEL_CLOSE"

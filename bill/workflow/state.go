@@ -1,4 +1,4 @@
-package bill
+package workflow
 
 type BillStatus string
 

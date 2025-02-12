@@ -1,6 +1,7 @@
 package bill
 
 import (
+	"encore.app/bill/workflow"
 	"fmt"
 	"slices"
 )
@@ -47,7 +48,7 @@ func (b BillItemDTO) Validate() error {
 	return nil
 }
 
-func BillResponseFromState(state BillState) *BillResponse {
+func BillResponseFromState(state workflow.BillState) *BillResponse {
 	res := &BillResponse{
 		ID:       state.ID,
 		Currency: state.Currency,
